@@ -14,6 +14,7 @@ Ranks = ["Iron", "Bronze", "Silver", "Gold", "Platinum", "Diamond", "Immortal", 
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
+from discord_slash import SlashCommand
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -22,6 +23,7 @@ GUILD = os.getenv('DISCORD_GUILD')
 
 intents = discord.Intents.all()
 client = commands.Bot(intents=intents, command_prefix="v!")
+slash = SlashCommand(client, sync_commands=True)
 Instances = 0
 
 async def FindRole(member):
@@ -94,10 +96,10 @@ async def MakeSelection(Attackers, Defenders, WaitingRoomMembers, a, b, msg, ctx
         MessageStr = "---------------------\nFinal Picks:\n\n"
         MessageStr += "\nAttackers:\n"
         for member in Attackers:
-            MessageStr += member.name + "#" + member.discriminator + " (" + Ranks[await FindRole(member)] + ")" + "\n"
+            MessageStr += member.name + "#" + member.discriminator + "\n"
         MessageStr += "\nDefenders:\n"
         for member in Defenders:
-            MessageStr += member.name + "#" + member.discriminator + " (" + Ranks[await FindRole(member)] + ")" + "\n"
+            MessageStr += member.name + "#" + member.discriminator + "\n"
         await msg.edit(content=MessageStr)
         return
 
@@ -105,13 +107,13 @@ async def MakeSelection(Attackers, Defenders, WaitingRoomMembers, a, b, msg, ctx
         MessageStr = "---------------------\n**Attacker's pick (captain only):**\n\n"
         MessageStr += "Availible picks:\n"
         for i in range(len(WaitingRoomMembers)):
-            MessageStr += numArray[i] + ":   " + WaitingRoomMembers[i].name + "#" + WaitingRoomMembers[i].discriminator + " (" + Ranks[await FindRole(WaitingRoomMembers[i])] + ")" + "\n"
+            MessageStr += numArray[i] + ":   " + WaitingRoomMembers[i].name + "#" + WaitingRoomMembers[i].discriminator + "\n"
         MessageStr += "\nAttackers:\n"
         for member in Attackers:
-            MessageStr += member.name + "#" + member.discriminator + " (" + Ranks[await FindRole(member)] + ")" + "\n"
+            MessageStr += member.name + "#" + member.discriminator + "\n"
         MessageStr += "\nDefenders:\n"
         for member in Defenders:
-            MessageStr += member.name + "#" + member.discriminator + " (" + Ranks[await FindRole(member)] + ")" + "\n"
+            MessageStr += member.name + "#" + member.discriminator + "\n"
         await msg.edit(content=MessageStr)
         reaction = await GetReaction(msg, Attackers[0], 180, ctx)
         if reaction == 1:
@@ -127,13 +129,13 @@ async def MakeSelection(Attackers, Defenders, WaitingRoomMembers, a, b, msg, ctx
         MessageStr = "---------------------\n**Defender's pick (captain only):**\n\n"
         MessageStr += "Availible picks:\n"
         for i in range(len(WaitingRoomMembers)):
-            MessageStr += numArray[i] + ":   " + WaitingRoomMembers[i].name + "#" + WaitingRoomMembers[i].discriminator + " (" + Ranks[await FindRole(WaitingRoomMembers[i])] + ")" + "\n"
+            MessageStr += numArray[i] + ":   " + WaitingRoomMembers[i].name + "#" + WaitingRoomMembers[i].discriminator + "\n"
         MessageStr += "\nAttackers:\n"
         for member in Attackers:
-            MessageStr += member.name + "#" + member.discriminator + " (" + Ranks[await FindRole(member)] + ")" + "\n"
+            MessageStr += member.name + "#" + member.discriminator + "\n"
         MessageStr += "\nDefenders:\n"
         for member in Defenders:
-            MessageStr += member.name + "#" + member.discriminator + " (" + Ranks[await FindRole(member)] + ")" + "\n"
+            MessageStr += member.name + "#" + member.discriminator + "\n"
         await msg.edit(content=MessageStr)
         reaction = await GetReaction(msg, Defenders[0], 180, ctx)
         if reaction == 1:
@@ -145,7 +147,7 @@ async def MakeSelection(Attackers, Defenders, WaitingRoomMembers, a, b, msg, ctx
         Defenders.append(Member)
         WaitingRoomMembers.remove(Member)
 
-async def MakeRandomSelections(Attackers, Defenders, WaitingRoomMembers, State):
+async def MakeRandomSelections(Attackers, Defenders, WaitingRoomMembers):
     DividedWaitingRoom = [[],[],[],[],[],[],[],[],[]]
     for member in WaitingRoomMembers:
         Role = await FindRole(member)
@@ -157,27 +159,61 @@ async def MakeRandomSelections(Attackers, Defenders, WaitingRoomMembers, State):
     State = random.choice([True, False])
     if State:
         Attackers.append(SortedWaitingRoom[0])
+        Attackers.append(SortedWaitingRoom[len(SortedWaitingRoom)-1])
         SortedWaitingRoom.pop(0)
+        SortedWaitingRoom.pop(len(SortedWaitingRoom)-1)
         State = not State
     else:
         Defenders.append(SortedWaitingRoom[0])
+        Defenders.append(SortedWaitingRoom[len(SortedWaitingRoom)-1])
         SortedWaitingRoom.pop(0)
+        SortedWaitingRoom.pop(len(SortedWaitingRoom)-1)
         State = not State
-    while len(SortedWaitingRoom) != 0:
+    while len(SortedWaitingRoom) != 2:
         if State:
             Attackers.append(SortedWaitingRoom[0])
+            Attackers.append(SortedWaitingRoom[len(SortedWaitingRoom)-1])
             SortedWaitingRoom.pop(0)
-            if len(SortedWaitingRoom) != 0:
+            SortedWaitingRoom.pop(len(SortedWaitingRoom)-1)
+            if len(SortedWaitingRoom) != 2:
                 Attackers.append(SortedWaitingRoom[0])
+                Attackers.append(SortedWaitingRoom[len(SortedWaitingRoom)-1])
                 SortedWaitingRoom.pop(0)
+                SortedWaitingRoom.pop(len(SortedWaitingRoom)-1)
             State = not State
         else:
             Defenders.append(SortedWaitingRoom[0])
+            Defenders.append(SortedWaitingRoom[len(SortedWaitingRoom)-1])
             SortedWaitingRoom.pop(0)
-            if len(SortedWaitingRoom) != 0:
+            SortedWaitingRoom.pop(len(SortedWaitingRoom)-1)
+            if len(SortedWaitingRoom) != 2:
                 Defenders.append(SortedWaitingRoom[0])
+                Defenders.append(SortedWaitingRoom[len(SortedWaitingRoom)-1])
                 SortedWaitingRoom.pop(0)
+                SortedWaitingRoom.pop(len(SortedWaitingRoom)-1)
             State = not State
+    State = random.choice([True, False])
+    if len(Attackers) == len(Defenders):
+        if State:
+            Attackers.append(SortedWaitingRoom[0])
+            SortedWaitingRoom.pop(0)
+            Defenders.append(SortedWaitingRoom[0])
+            SortedWaitingRoom.pop(0)
+        else:
+            Defenders.append(SortedWaitingRoom[0])
+            SortedWaitingRoom.pop(0)
+            Attackers.append(SortedWaitingRoom[0])
+            SortedWaitingRoom.pop(0)
+    elif len(Attackers) < len(Defenders):
+        Attackers.append(SortedWaitingRoom[0])
+        SortedWaitingRoom.pop(0)
+        Attackers.append(SortedWaitingRoom[0])
+        SortedWaitingRoom.pop(0)
+    else:
+        Defenders.append(SortedWaitingRoom[0])
+        SortedWaitingRoom.pop(0)
+        Defenders.append(SortedWaitingRoom[0])
+        SortedWaitingRoom.pop(0)
 
 async def ManageRoom(Attackers, Defenders, WaitingRoomMembers, msg, ctx, captain):
     global Instances
@@ -205,44 +241,18 @@ async def ManageRoom(Attackers, Defenders, WaitingRoomMembers, msg, ctx, captain
             for i in range(len(Defenders)-1, -1, -1):
                 WaitingRoomMembers.append(Defenders[i])
                 Defenders.pop(i)                
-            DividedWaitingRoom = [[],[],[],[],[],[],[],[],[]]
-            for member in WaitingRoomMembers:
-                Role = await FindRole(member)
-                DividedWaitingRoom[Role].append(member)
-            for i in range(len(DividedWaitingRoom)):
-                if len(DividedWaitingRoom[i]) != 0:
-                    random.shuffle(DividedWaitingRoom[i])
-            SortedWaitingRoom = list(chain.from_iterable(DividedWaitingRoom))
-            State = random.choice([True, False])
-            if State:
-                Attackers.append(SortedWaitingRoom[0])
-                SortedWaitingRoom.pop(0)
-                State = not State
-            else:
-                Defenders.append(SortedWaitingRoom[0])
-                SortedWaitingRoom.pop(0)
-                State = not State
-            while len(SortedWaitingRoom) != 0:
-                if State:
-                    Attackers.append(SortedWaitingRoom[0])
-                    SortedWaitingRoom.pop(0)
-                    if len(SortedWaitingRoom) != 0:
-                        Attackers.append(SortedWaitingRoom[0])
-                        SortedWaitingRoom.pop(0)
-                    State = not State
-                else:
-                    Defenders.append(SortedWaitingRoom[0])
-                    SortedWaitingRoom.pop(0)
-                    if len(SortedWaitingRoom) != 0:
-                        Defenders.append(SortedWaitingRoom[0])
-                        SortedWaitingRoom.pop(0)
-                    State = not State
-            WaitingRoomMembers = []
+            random.shuffle(WaitingRoomMembers)
+            numPlayers = len(WaitingRoomMembers)
+            for i in range(numPlayers//2):  
+                Attackers.append(WaitingRoomMembers[0])
+                WaitingRoomMembers.pop(0)
+            for i in range(numPlayers//2):  
+                Defenders.append(WaitingRoomMembers[0])
+                WaitingRoomMembers.pop(0)
             Rand = random.choice(range(2))
             State = random.choice([True, False])
             await MakeSelection(Attackers, Defenders, WaitingRoomMembers, Rand, State, msg, ctx)
-            
-            
+                   
     await msg.clear_reactions()
     
     Category = await guild.create_category(CategoryTitle)
@@ -285,15 +295,16 @@ async def ManageRoom(Attackers, Defenders, WaitingRoomMembers, msg, ctx, captain
 async def on_ready():
     print("Ready!\n-------")
     
-@client.command()
+@slash.slash(description="Starts 10 man game.")
 async def start(context):
+    await context.send("Starting 10 man queue.")
     try:
         global Instances
         guild = context.guild
         Instances += 1
         print("Current Instances =", Instances)
         
-        msg1 = await context.channel.send("Starting 10 man queue. React to the check mark to confirm 10 players in the waiting room.")
+        msg1 = await context.channel.send("React to the check mark to confirm 10 players in the waiting room.")
         await msg1.add_reaction("✅")
         await msg1.add_reaction("❌")
         reaction = await GetReaction(msg1, 2, 180, context)
@@ -415,39 +426,7 @@ async def start(context):
             Attackers = []
             Defenders = []
             msgPicks = await context.channel.send("Generating Picks")
-            DividedWaitingRoom = [[],[],[],[],[],[],[],[],[]]
-            for member in WaitingRoomMembers:
-                Role = await FindRole(member)
-                DividedWaitingRoom[Role].append(member)
-                print(member.name, " is rank ", Ranks[Role])
-            for i in range(len(DividedWaitingRoom)):
-                if len(DividedWaitingRoom[i]) != 0:
-                    random.shuffle(DividedWaitingRoom[i])
-            SortedWaitingRoom = list(chain.from_iterable(DividedWaitingRoom))
-            State = random.choice([True, False])
-            if State:
-                Attackers.append(SortedWaitingRoom[0])
-                SortedWaitingRoom.pop(0)
-                State = not State
-            else:
-                Defenders.append(SortedWaitingRoom[0])
-                SortedWaitingRoom.pop(0)
-                State = not State
-            while len(SortedWaitingRoom) != 0:
-                if State:
-                    Attackers.append(SortedWaitingRoom[0])
-                    SortedWaitingRoom.pop(0)
-                    if len(SortedWaitingRoom) != 0:
-                        Attackers.append(SortedWaitingRoom[0])
-                        SortedWaitingRoom.pop(0)
-                    State = not State
-                else:
-                    Defenders.append(SortedWaitingRoom[0])
-                    SortedWaitingRoom.pop(0)
-                    if len(SortedWaitingRoom) != 0:
-                        Defenders.append(SortedWaitingRoom[0])
-                        SortedWaitingRoom.pop(0)
-                    State = not State
+            await MakeRandomSelections(Attackers, Defenders, WaitingRoomMembers)
             WaitingRoomMembers = []
             Rand = random.choice(range(2))
             State = random.choice([True, False])
@@ -488,10 +467,10 @@ async def deleteVC(context, arg):
     
     return
     
-@client.command()
+@slash.slash(description="Generates a random map from the Valorant map pool.")
 async def map(context):
     randMap = random.choice(Maps)
-    await context.channel.send("The randomly generated map is: " + randMap)
+    await context.send("The randomly generated map is: " + randMap)
     return
 
 @client.command()
