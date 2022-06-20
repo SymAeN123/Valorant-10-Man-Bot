@@ -601,13 +601,4 @@ async def side(context):
 async def excuses(context):
 	await context.channel.send(context.author.name + " wants you to stop making excuses!")
 
-@client.command()
-async def printdata(context):
-	data = loadData()
-	data.printData()
-@client.command()
-async def printarray(context):
-	data = loadData()
-	print(data.getArray(str(context.guild.id)))
-
 client.run(TOKEN)
